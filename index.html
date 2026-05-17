@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="Le jeu de fléchettes Cricket, façon western mexicain">
+    <meta name="theme-color" content="#0a0a0a">
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Apple PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cricket †">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/icons/icon-192x192.png">
+
+    <title>Cricket de la Muerte</title>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/fonts.css">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+    <!-- App Container -->
+    <div id="app">
+
+        <!-- Install Prompt (hidden by default) -->
+        <div id="install-prompt" class="install-prompt hidden">
+            <div class="install-prompt-content">
+                <h2>⚡ Installer Cricket de la Muerte</h2>
+                <p>Installez l'application pour une expérience optimale !</p>
+                <div class="install-prompt-buttons">
+                    <button id="install-button" class="btn btn-primary">Installer</button>
+                    <button id="install-dismiss" class="btn btn-secondary">Plus tard</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header class="app-header">
+            <h1 class="app-title">Cricket de la Muerte</h1>
+            <div class="skull-decoration">💀</div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="main-content">
+
+            <!-- Screen: Home/Play -->
+            <section id="screen-play" class="screen active">
+                <div class="welcome-container">
+                    <div class="target-icon">🎯</div>
+                    <h2>Bienvenue, Amigo!</h2>
+                    <p class="tagline">Prêt à affronter la mort sur la cible ?</p>
+
+                    <div class="menu-buttons">
+                        <button id="new-game-btn" class="btn btn-primary btn-large">
+                            🔫 Nouvelle Partie
+                        </button>
+                        <button id="resume-game-btn" class="btn btn-secondary btn-large hidden">
+                            ▶️ Reprendre la Partie
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Screen: Game Setup -->
+            <section id="screen-game-setup" class="screen">
+                <div class="setup-container">
+                    <h2>Configuration de la Partie</h2>
+
+                    <div class="form-group">
+                        <label>Mode de Jeu :</label>
+                        <div class="mode-selector">
+                            <button class="mode-btn active" data-mode="classic">
+                                <strong>Cricket Classique</strong>
+                                <span>Le plus de points gagne</span>
+                            </button>
+                            <button class="mode-btn" data-mode="cutthroat">
+                                <strong>Cut-throat Cricket</strong>
+                                <span>Le moins de points gagne</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Joueurs (2-6) :</label>
+                        <div id="player-selection" class="player-selection">
+                            <!-- Les joueurs disponibles seront insérés ici -->
+                        </div>
+                    </div>
+
+                    <div class="setup-actions">
+                        <button id="start-opening-throw-btn" class="btn btn-primary btn-large" disabled>
+                            🎲 Lancer d'Ouverture
+                        </button>
+                        <button id="cancel-setup-btn" class="btn btn-secondary">
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Screen: Opening Throw -->
+            <section id="screen-opening-throw" class="screen">
+                <div class="opening-throw-container">
+                    <h2>Lancer d'Ouverture</h2>
+                    <p>Chaque joueur lance 1 fléchette. Le plus proche du centre commence!</p>
+
+                    <div id="opening-throw-list" class="opening-throw-list">
+                        <!-- Liste des joueurs avec cases à cocher -->
+                    </div>
+
+                    <div class="opening-throw-actions">
+                        <button id="validate-opening-throw-btn" class="btn btn-primary btn-large" disabled>
+                            ✅ Valider le Gagnant
+                        </button>
+                        <button id="retry-opening-throw-btn" class="btn btn-secondary hidden">
+                            🔄 Relancer (Égalité)
+                        </button>
+                        <button id="cancel-opening-throw-btn" class="btn btn-secondary">
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Screen: In Game -->
+            <section id="screen-in-game" class="screen">
+                <div class="game-container">
+                    <!-- Game Info Bar -->
+                    <div class="game-info-bar">
+                        <div class="current-player-info">
+                            <img id="current-player-avatar" class="player-avatar-small" src="" alt="">
+                            <span id="current-player-name">Joueur</span>
+                        </div>
+                        <div class="dart-indicator">
+                            Fléchette <span id="current-dart">1</span>/3
+                        </div>
+                        <button id="undo-dart-btn" class="btn btn-small btn-secondary" disabled>
+                            ↶ Annuler
+                        </button>
+                    </div>
+
+                    <!-- Scoreboard -->
+                    <div id="scoreboard" class="scoreboard">
+                        <!-- Le tableau de scores sera généré dynamiquement -->
+                    </div>
+
+                    <!-- Dart Input (simplifié - saisie directe dans le scoreboard) -->
+                    <div class="dart-input">
+                        <button id="miss-btn" class="btn btn-miss">
+                            💨 Raté !
+                        </button>
+                        <button id="quit-game-btn" class="btn btn-secondary">
+                            Quitter
+                        </button>
+                    </div>
+
+                    <!-- Game Actions -->
+                    <div class="game-actions">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Screen: Game Over -->
+            <section id="screen-game-over" class="screen">
+                <div class="game-over-container">
+                    <h2 class="winner-title">🏆 ¡Victoria! 🏆</h2>
+                    <div id="winner-info" class="winner-info">
+                        <!-- Avatar et nom du gagnant -->
+                    </div>
+
+                    <div class="western-gif-container">
+                        <img id="western-gif" src="" alt="Western celebration">
+                    </div>
+
+                    <button id="test-gif-btn" class="btn btn-small btn-secondary">
+                        🎲 Autre GIF
+                    </button>
+
+                    <div class="game-over-actions">
+                        <button id="rematch-btn" class="btn btn-primary btn-large">
+                            🔄 Revanche !
+                        </button>
+                        <button id="back-to-menu-btn" class="btn btn-secondary">
+                            Menu Principal
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Screen: Players Management -->
+            <section id="screen-players" class="screen">
+                <div class="players-container">
+                    <h2>Gestion des Joueurs</h2>
+
+                    <button id="add-player-btn" class="btn btn-primary">
+                        ➕ Ajouter un Joueur
+                    </button>
+
+                    <div id="players-list" class="players-list">
+                        <!-- Liste des joueurs sera générée ici -->
+                    </div>
+                </div>
+
+                <!-- Modal: Add/Edit Player -->
+                <div id="player-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <h3 id="player-modal-title">Nouveau Joueur</h3>
+
+                        <div class="form-group">
+                            <label for="player-name-input">Nom :</label>
+                            <input type="text" id="player-name-input" maxlength="20" placeholder="Entrez le nom">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Avatar :</label>
+                            <div class="avatar-selector">
+                                <div id="current-avatar-preview" class="avatar-preview">
+                                    <!-- Aperçu de l'avatar -->
+                                </div>
+                                <div class="avatar-options">
+                                    <button id="avatar-camera-btn" class="btn btn-small">📷 Caméra</button>
+                                    <button id="avatar-gallery-btn" class="btn btn-small">🖼️ Galerie</button>
+                                    <button id="avatar-default-btn" class="btn btn-small">🎭 Défaut</button>
+                                </div>
+                                <input type="file" id="avatar-file-input" accept="image/*" class="hidden">
+                                <input type="file" id="avatar-camera-input" accept="image/*" capture="environment" class="hidden">
+                            </div>
+                        </div>
+
+                        <div id="default-avatars-grid" class="default-avatars-grid hidden">
+                            <!-- Les avatars SVG par défaut seront insérés ici -->
+                        </div>
+
+                        <div class="modal-actions">
+                            <button id="save-player-btn" class="btn btn-primary">Sauvegarder</button>
+                            <button id="cancel-player-btn" class="btn btn-secondary">Annuler</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Screen: Stats -->
+            <section id="screen-stats" class="screen">
+                <div class="stats-container">
+                    <h2>Statistiques</h2>
+
+                    <div class="stats-tabs">
+                        <button class="stats-tab active" data-tab="global">Vue Globale</button>
+                        <button class="stats-tab" data-tab="player">Par Joueur</button>
+                        <button class="stats-tab" data-tab="history">Historique</button>
+                    </div>
+
+                    <div id="stats-content" class="stats-content">
+                        <!-- Le contenu des stats sera généré dynamiquement -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Screen: Settings -->
+            <section id="screen-settings" class="screen">
+                <div class="settings-container">
+                    <h2>Réglages</h2>
+
+                    <div class="settings-list">
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="setting-sounds" checked>
+                                <span>🔊 Sons activés</span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="setting-vibrations" checked>
+                                <span>📳 Vibrations activées</span>
+                            </label>
+                        </div>
+
+                        <div class="setting-item">
+                            <button id="clear-history-btn" class="btn btn-danger">
+                                🗑️ Effacer l'historique des parties
+                            </button>
+                        </div>
+
+                        <div class="setting-item">
+                            <button id="clear-players-btn" class="btn btn-danger">
+                                🗑️ Effacer tous les joueurs
+                            </button>
+                        </div>
+
+                        <div class="setting-item about">
+                            <h3>À propos</h3>
+                            <p><strong>Cricket de la Muerte</strong></p>
+                            <p>Version 1.0.0</p>
+                            <p>Une PWA de jeu de fléchettes Cricket</p>
+                            <p>Ambiance Western Mexicain 🌵💀🎯</p>
+                            <p class="credits">Généré avec ❤️ par Claude</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-screen="play">
+                <span class="nav-icon">🎯</span>
+                <span class="nav-label">Jouer</span>
+            </button>
+            <button class="nav-btn" data-screen="players">
+                <span class="nav-icon">👥</span>
+                <span class="nav-label">Joueurs</span>
+            </button>
+            <button class="nav-btn" data-screen="stats">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Stats</span>
+            </button>
+            <button class="nav-btn" data-screen="settings">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Réglages</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/sounds.js"></script>
+    <script src="/js/players.js"></script>
+    <script src="/js/stats.js"></script>
+    <script src="/js/game.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>

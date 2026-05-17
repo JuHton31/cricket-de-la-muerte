@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir sounds:*)",
+      "Bash(mkdir gifs:*)",
+      "WebFetch(domain:juhton31.github.io)",
+      "Bash(curl -L https://juhton31.github.io/cricket-de-la-muerte/sw.js)",
+      "WebFetch(domain:fonts.googleapis.com)"
+    ]
+  }
+}

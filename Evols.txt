@@ -1,0 +1,11 @@
+ bon ca marche, mais j'ai des remarques sur l'interface de saisie des points de fléchettes:sur mon téléphone, je dois
+  scroller, cela m'ennuie, j'aimerai que tout tienne sur l'écran donc on va revoir l'interface de saisie, même UI, mais
+   UX différent donc la saisie se fera en tapotant 1, 2 ou 3 fois sur la case du numéro, cela nous évitera les cases
+  simples, double, triple.on garde une touche "Raté, Gros Naze!).on va changer aussi les marques styles craies
+  classiques, on va plutôt mettre des émojis: émoji pouce en l'air pour 1 marque, émoji doigts en V pour la deuxième
+  marque, émoji machine à sous pour la troisième marque lorsqu'elle est ouverte et permet de marquer des points et
+  émoji sens interdit lorsque elle permet de fermer la case.j 'aimerai le même son pour chaque saisie (sauf la case
+  raté), je l'ai en.mp3, je te le donne C:\Users\hancart\Downloads\SF-ricochet-4.mp3. pour la case "Raté Gros Naze!",
+  j'aimerai que tu utilises ce son : C:\Users\hancart\Downloads\sf_pet_10.mp3.Enfin, sur l'écran de victoire finale,
+  j'aimerai une animation western qui prenne tout l'écran en affichant le nom du joueur vainqueur accompagné d'un Gif
+  random parmi ceux là : [Image #2] [Image #3] [Image #4] [Image #5] [Image #6] [Image #7] [Image #8] [Image #9]

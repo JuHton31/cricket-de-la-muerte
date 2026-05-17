@@ -1,0 +1,22 @@
+/* =====================================================
+   FONTS LOCALES — Rye + Special Elite
+   Téléchargées depuis Google Fonts pour usage offline
+   ===================================================== */
+
+/* Rye — Font Western pour les titres */
+@font-face {
+    font-family: 'Rye';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/rye.ttf') format('truetype');
+}
+
+/* Special Elite — Font machine à écrire pour le corps de texte */
+@font-face {
+    font-family: 'Special Elite';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/special-elite.ttf') format('truetype');
+}

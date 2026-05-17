@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a0a0a">
+    <title>Hors ligne - Cricket de la Muerte</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Georgia, serif;
+            background-color: #0a0a0a;
+            color: #F5F0E8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .offline-container {
+            max-width: 500px;
+        }
+
+        .skull {
+            font-size: 5rem;
+            margin-bottom: 2rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #C9A84C;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 1rem 2rem;
+            background-color: #C9A84C;
+            color: #0a0a0a;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            border: 2px solid #C9A84C;
+        }
+
+        .btn:hover {
+            background-color: #d4b860;
+            transform: scale(1.05);
+        }
+
+        .info {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="skull">💀</div>
+        <h1>¡Ay, Caramba!</h1>
+        <p>Vous êtes hors ligne, amigo.</p>
+        <p>Vérifiez votre connexion Internet pour continuer à jouer.</p>
+        <p>Les parties enregistrées sont toujours accessibles hors ligne !</p>
+
+        <a href="/" class="btn" onclick="window.location.reload(); return false;">
+            🔄 Réessayer
+        </a>
+
+        <div class="info">
+            Cricket de la Muerte<br>
+            Version PWA offline
+        </div>
+    </div>
+</body>
+</html>

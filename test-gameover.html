@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Test Game Over - Cricket de la Muerte</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rye&family=Special+Elite&display=swap" rel="stylesheet">
+    <style>
+        /* Variables CSS */
+        :root {
+            --bg-black: #0a0a0a;
+            --gold: #C9A84C;
+            --blood-red: #8B0000;
+            --leather-brown: #6B3A2A;
+            --off-white: #F5F0E8;
+            --dark-gray: #1a1a1a;
+            --medium-gray: #2a2a2a;
+            --font-title: 'Rye', Georgia, serif;
+            --font-body: 'Special Elite', Georgia, serif;
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-black);
+            color: var(--off-white);
+            font-size: 16px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-header {
+            position: relative;
+            padding: var(--spacing-md);
+            background: linear-gradient(135deg, var(--blood-red), var(--leather-brown));
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            border-bottom: 3px solid var(--gold);
+        }
+
+        .app-title {
+            font-family: var(--font-title);
+            font-size: 1.8rem;
+            color: var(--gold);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            margin: 0;
+        }
+
+        .skull-decoration {
+            position: absolute;
+            top: 50%;
+            right: var(--spacing-md);
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow: hidden;
+            padding-bottom: 80px;
+        }
+
+        .screen {
+            padding: var(--spacing-md);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Game Over Screen */
+        .game-over-container {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--spacing-lg);
+            padding: var(--spacing-lg);
+        }
+
+        .winner-title {
+            font-family: var(--font-title);
+            font-size: 2rem;
+            color: var(--gold);
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            margin: 0;
+        }
+
+        .winner-info {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+            background-color: var(--dark-gray);
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius);
+            border: 2px solid var(--gold);
+        }
+
+        .winner-info .player-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid var(--gold);
+            object-fit: cover;
+        }
+
+        .winner-info .winner-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        .winner-info .winner-score {
+            font-size: 1.2rem;
+            color: var(--off-white);
+        }
+
+        .western-gif-container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .western-gif-container img {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: var(--border-radius);
+            border: 3px solid var(--gold);
+        }
+
+        .game-over-actions {
+            display: flex;
+            flex-direction: row;
+            gap: var(--spacing-md);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .game-over-actions button {
+            flex: 1;
+        }
+
+        .btn {
+            font-family: var(--font-body);
+            padding: var(--spacing-md) var(--spacing-lg);
+            border: 2px solid transparent;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-primary {
+            background-color: var(--gold);
+            color: var(--bg-black);
+            border-color: var(--gold);
+        }
+
+        .btn-primary:hover {
+            background-color: transparent;
+            color: var(--gold);
+            border-color: var(--gold);
+        }
+
+        .btn-secondary {
+            background-color: var(--leather-brown);
+            color: var(--off-white);
+            border-color: var(--leather-brown);
+        }
+
+        .btn-secondary:hover {
+            background-color: transparent;
+            color: var(--leather-brown);
+            border-color: var(--leather-brown);
+        }
+
+        .btn-large {
+            font-size: 1.2rem;
+            padding: var(--spacing-lg) var(--spacing-xl);
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            background-color: var(--dark-gray);
+            border-top: 2px solid var(--gold);
+            padding: var(--spacing-sm);
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+        }
+
+        .nav-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            color: var(--off-white);
+            padding: var(--spacing-sm);
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+        }
+
+        .nav-btn.active {
+            color: var(--gold);
+            background-color: rgba(201, 168, 76, 0.2);
+        }
+
+        .nav-icon {
+            font-size: 1.5rem;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .nav-label {
+            font-size: 0.7rem;
+        }
+
+        .placeholder-gif {
+            width: 100%;
+            max-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--medium-gray);
+            border-radius: var(--border-radius);
+            border: 3px solid var(--gold);
+            font-size: 3rem;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <h1 class="app-title">Cricket de la Muerte</h1>
+            <div class="skull-decoration">💀</div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <section class="screen">
+                <div class="game-over-container">
+                    <h2 class="winner-title">🏆 ¡Victoria! 🏆</h2>
+
+                    <div id="winner-info" class="winner-info">
+                        <!-- Avatar et nom du gagnant -->
+                        <img class="player-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23C9A84C'/%3E%3Ctext x='50' y='70' text-anchor='middle' font-size='60' fill='%230a0a0a'%3E🎯%3C/text%3E%3C/svg%3E" alt="Nono">
+                        <div>
+                            <div class="winner-name">Nono</div>
+                            <div class="winner-score">Score: 125</div>
+                        </div>
+                    </div>
+
+                    <div class="western-gif-container">
+                        <img id="western-gif" src="" alt="Western celebration">
+                    </div>
+
+                    <button id="test-gif-btn" class="btn btn-secondary" style="margin-top: -1rem;">
+                        🎲 Tester un autre GIF
+                    </button>
+
+                    <div class="game-over-actions">
+                        <button id="rematch-btn" class="btn btn-primary btn-large">
+                            🔄 Revanche !
+                        </button>
+                        <button id="back-to-menu-btn" class="btn btn-secondary">
+                            Menu Principal
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active">
+                <span class="nav-icon">🎯</span>
+                <span class="nav-label">Jouer</span>
+            </button>
+            <button class="nav-btn">
+                <span class="nav-icon">👥</span>
+                <span class="nav-label">Joueurs</span>
+            </button>
+            <button class="nav-btn">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Stats</span>
+            </button>
+            <button class="nav-btn">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Réglages</span>
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        // Liste des GIFs western (chemins relatifs pour test local)
+        const westernGifs = [
+            'gifs/1.gif',
+            'gifs/2.gif',
+            'gifs/3.gif',
+            'gifs/4.gif',
+            'gifs/5.gif',
+            'gifs/6.gif',
+            'gifs/7.gif',
+            'gifs/8.gif'
+        ];
+
+        // Fonction pour charger un GIF aléatoire
+        function loadRandomGif() {
+            const randomGif = westernGifs[Math.floor(Math.random() * westernGifs.length)];
+            const gifElement = document.getElementById('western-gif');
+
+            if (gifElement) {
+                gifElement.src = randomGif;
+                gifElement.alt = 'Western celebration';
+
+                // Fallback si le GIF ne charge pas
+                gifElement.onerror = () => {
+                    gifElement.style.display = 'none';
+                    console.warn('❌ GIF non trouvé:', randomGif);
+                    alert('⚠️ GIF non trouvé:\n' + randomGif + '\n\nVérifie que le fichier existe dans le dossier /gifs/');
+                };
+
+                gifElement.onload = () => {
+                    console.log('✅ GIF chargé:', randomGif);
+                };
+            }
+        }
+
+        // Charger un GIF au chargement de la page
+        loadRandomGif();
+
+        // Bouton pour tester différents GIFs
+        document.getElementById('test-gif-btn').addEventListener('click', () => {
+            loadRandomGif();
+        });
+
+        // Test pour vérifier que le bouton revanche fonctionne
+        document.getElementById('rematch-btn').addEventListener('click', () => {
+            alert('✅ Le bouton Revanche a été cliqué!\n\nDans l\'application réelle, cela va:\n1. Créer une nouvelle partie\n2. Réutiliser les mêmes joueurs\n3. Naviguer vers l\'écran de jeu\n4. Commencer immédiatement sans lancer d\'ouverture');
+        });
+
+        document.getElementById('back-to-menu-btn').addEventListener('click', () => {
+            alert('✅ Retour au menu principal');
+        });
+
+        // Test pour vérifier l'affichage des infos du gagnant
+        console.log('✅ Winner info affiché:');
+        console.log('- Nom: Nono');
+        console.log('- Score: 125');
+        console.log('- Avatar: Visible');
+    </script>
+</body>
+</html>

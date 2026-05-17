@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Taille Emojis Scoreboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rye&family=Special+Elite&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-black: #0a0a0a;
+            --gold: #C9A84C;
+            --off-white: #F5F0E8;
+            --dark-gray: #1a1a1a;
+            --medium-gray: #2a2a2a;
+            --font-body: 'Special Elite', Georgia, serif;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-black);
+            color: var(--off-white);
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--gold);
+        }
+
+        .scoreboard {
+            max-width: 100%;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .scoreboard table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--dark-gray);
+        }
+
+        .scoreboard th,
+        .scoreboard td {
+            border: 1px solid var(--medium-gray);
+            padding: 0.5rem;
+            text-align: center;
+        }
+
+        .scoreboard th {
+            background-color: var(--medium-gray);
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        .scoreboard td {
+            min-width: 60px;
+            height: 50px;
+            position: relative;
+        }
+
+        .cell-emoji {
+            display: block;
+            font-size: 1.5rem;
+        }
+
+        .info {
+            text-align: center;
+            color: var(--gold);
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Taille des Emojis - Scoreboard</h1>
+    <div class="info">
+        <p><strong>Taille des emojis : 1.5rem</strong></p>
+        <p>👍 = 1 marque | ✌️ = 2 marques | 🎰 = 3 marques (ouvert) | 🚫 = 3 marques (fermé)</p>
+    </div>
+
+    <div class="scoreboard">
+        <table>
+            <thead>
+                <tr>
+                    <th>N°</th>
+                    <th>Joueur 1</th>
+                    <th>Joueur 2</th>
+                    <th>Joueur 3</th>
+                    <th>Joueur 4</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>15</strong></td>
+                    <td><span class="cell-emoji">👍</span></td>
+                    <td><span class="cell-emoji">✌️</span></td>
+                    <td><span class="cell-emoji">🎰</span></td>
+                    <td><span class="cell-emoji">🚫</span></td>
+                </tr>
+                <tr>
+                    <td><strong>16</strong></td>
+                    <td><span class="cell-emoji">✌️</span></td>
+                    <td><span class="cell-emoji">🎰</span></td>
+                    <td><span class="cell-emoji">🚫</span></td>
+                    <td><span class="cell-emoji">👍</span></td>
+                </tr>
+                <tr>
+                    <td><strong>17</strong></td>
+                    <td><span class="cell-emoji">🎰</span></td>
+                    <td><span class="cell-emoji">🚫</span></td>
+                    <td><span class="cell-emoji">👍</span></td>
+                    <td><span class="cell-emoji">✌️</span></td>
+                </tr>
+                <tr>
+                    <td><strong>18</strong></td>
+                    <td><span class="cell-emoji">🚫</span></td>
+                    <td><span class="cell-emoji">👍</span></td>
+                    <td><span class="cell-emoji">✌️</span></td>
+                    <td><span class="cell-emoji">🎰</span></td>
+                </tr>
+                <tr>
+                    <td><strong>19</strong></td>
+                    <td><span class="cell-emoji">👍</span></td>
+                    <td><span class="cell-emoji">✌️</span></td>
+                    <td><span class="cell-emoji">🎰</span></td>
+                    <td><span class="cell-emoji">🚫</span></td>
+                </tr>
+                <tr>
+                    <td><strong>20</strong></td>
+                    <td><span class="cell-emoji">✌️</span></td>
+                    <td><span class="cell-emoji">🎰</span></td>
+                    <td><span class="cell-emoji">🚫</span></td>
+                    <td><span class="cell-emoji">👍</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Bull</strong></td>
+                    <td><span class="cell-emoji">🎰</span></td>
+                    <td><span class="cell-emoji">🚫</span></td>
+                    <td><span class="cell-emoji">👍</span></td>
+                    <td><span class="cell-emoji">✌️</span></td>
+                </tr>
+                <tr class="score-row">
+                    <td><strong>Score</strong></td>
+                    <td>125</td>
+                    <td>98</td>
+                    <td>156</td>
+                    <td>87</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="info">
+        <p>Les emojis sont maintenant à <strong>1.5rem</strong> (avant : 0.9rem)</p>
+        <p>Les cases gardent la même taille, seuls les emojis sont plus gros ✅</p>
+    </div>
+</body>
+</html>
