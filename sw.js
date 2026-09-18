@@ -5,7 +5,7 @@
  * Fallback offline
  */
 
-const CACHE_VERSION = 'CRICKET_MUERTE_V20';
+const CACHE_VERSION = 'CRICKET_MUERTE_V21';
 const CACHE_STATIC = `${CACHE_VERSION}_static`;
 const CACHE_DYNAMIC = `${CACHE_VERSION}_dynamic`;
 
@@ -25,6 +25,8 @@ const STATIC_ASSETS = [
     '/js/sounds.js',
     '/icons/icon-192x192.png',
     '/icons/icon-512x512.png',
+    '/icons/pistol.svg',
+    '/icons/razor.png',
     // Fonts locales
     '/fonts/rye.ttf',
     '/fonts/special-elite.ttf',
