@@ -51,7 +51,21 @@ const StatsManager = (() => {
             finishedAt: game.finishedAt,
             winnerId: game.winner.id,
             winnerName: game.winner.name,
+            fullGameData: game, // Sauvegarder l'objet complet pour affichage détaillé
             players: game.players.map(player => {
+                // Mode 301 : statistiques différentes
+                if (game.mode === '301') {
+                    return {
+                        id: player.id,
+                        name: player.name,
+                        finalScore: player.score,
+                        dartsThrown: player.dartsThrown || 0,
+                        avgPerRound: player.avgPerRound || 0,
+                        rounds: player.roundsHistory ? player.roundsHistory.length : 0
+                    };
+                }
+
+                // Mode Cricket : statistiques existantes
                 const playerDarts = game.dartsHistory.filter(d => d.playerIndex === game.players.indexOf(player));
                 const validDarts = playerDarts.filter(d => d.number && d.multiplier > 0);
                 const totalDarts = playerDarts.length;
@@ -116,6 +130,21 @@ const StatsManager = (() => {
             const request = store.getAll();
             request.onsuccess = () => resolve(request.result || []);
             request.onerror = () => resolve([]);
+        });
+    }
+
+    /**
+     * Obtenir une partie spécifique par son ID
+     */
+    async function getGameById(gameId) {
+        const database = await getDB();
+        const transaction = database.transaction(['games'], 'readonly');
+        const store = transaction.objectStore('games');
+
+        return new Promise((resolve) => {
+            const request = store.get(gameId);
+            request.onsuccess = () => resolve(request.result || null);
+            request.onerror = () => resolve(null);
         });
     }
 
@@ -388,7 +417,21 @@ const StatsManager = (() => {
                 ${games.map(game => {
                     const date = new Date(game.finishedAt);
                     const duration = Math.round((game.finishedAt - game.startedAt) / 60000);
-                    const modeLabel = game.mode === 'classic' ? 'Classique' : 'Cut-throat';
+                    const modeLabel = game.mode === 'classic' ? 'Classique'
+                                    : game.mode === 'cutthroat' ? 'Cut-throat'
+                                    : 'Mode 301';
+
+                    // Affichage spécifique selon le mode
+                    let playersInfo = '';
+                    if (game.mode === '301') {
+                        playersInfo = game.players.map(p =>
+                            `${p.name}: ${p.finalScore} pts (${p.rounds} volées)`
+                        ).join(' • ');
+                    } else {
+                        playersInfo = game.players.map(p =>
+                            `${p.name}: ${p.score} pts (${p.closedNumbers.length}/7 fermés)`
+                        ).join(' • ');
+                    }
 
                     return `
                         <div class="history-item">
@@ -400,10 +443,11 @@ const StatsManager = (() => {
                             </div>
                             <div class="history-players">
                                 🏆 <strong>${game.winnerName}</strong> a gagné<br>
-                                ${game.players.map(p =>
-                                    `${p.name}: ${p.score} pts (${p.closedNumbers.length}/7 fermés)`
-                                ).join(' • ')}
+                                ${playersInfo}
                             </div>
+                            <button class="btn btn-secondary btn-view-game-detail" data-game-id="${game.id}" style="margin-top: 0.5rem; width: 100%;">
+                                📊 Voir Détails
+                            </button>
                         </div>
                     `;
                 }).join('')}
@@ -411,6 +455,94 @@ const StatsManager = (() => {
         `;
 
         container.innerHTML = html;
+
+        // Ajouter les event listeners pour les boutons "Voir Détails"
+        const viewButtons = container.querySelectorAll('.btn-view-game-detail');
+        viewButtons.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const gameId = parseInt(btn.dataset.gameId);
+                await showGameDetail(gameId);
+            });
+        });
+    }
+
+    /**
+     * Afficher le détail d'une partie dans un modal
+     */
+    async function showGameDetail(gameId) {
+        const game = await getGameById(gameId);
+
+        if (!game || !game.fullGameData) {
+            alert('Impossible de charger les détails de cette partie.');
+            return;
+        }
+
+        const modal = document.getElementById('game-detail-modal');
+        const container = document.getElementById('game-detail-container');
+        const titleElement = document.getElementById('game-detail-title');
+
+        // Mettre à jour le titre
+        const date = new Date(game.finishedAt);
+        const modeLabel = game.mode === 'classic' ? 'Classique' : 'Cut-throat';
+        titleElement.textContent = `📊 ${modeLabel} - ${date.toLocaleDateString()}`;
+
+        // Générer le scoreboard
+        const gameData = game.fullGameData;
+        const players = gameData.players;
+        const CRICKET_NUMBERS = [15, 16, 17, 18, 19, 20, 25];
+
+        let html = '<table class="scoreboard"><thead><tr><th><strong>N°</strong></th>';
+
+        // En-têtes des joueurs
+        players.forEach(player => {
+            html += `<th><strong>${player.name}</strong></th>`;
+        });
+        html += '</tr></thead><tbody>';
+
+        // Lignes pour chaque numéro
+        CRICKET_NUMBERS.forEach(num => {
+            html += `<tr><td><strong>${num === 25 ? 'Bull' : num}</strong></td>`;
+
+            players.forEach((player) => {
+                const marks = player.marks[num];
+                let emoji = '';
+
+                if (marks === 1) {
+                    emoji = '👍';
+                } else if (marks === 2) {
+                    emoji = '✌️';
+                } else if (marks === 3) {
+                    const allClosed = players.every(p => p.marks[num] >= 3);
+                    emoji = allClosed ? '🚫' : '🎰';
+                }
+
+                html += `<td><span class="cell-emoji">${emoji}</span></td>`;
+            });
+
+            html += '</tr>';
+        });
+
+        // Ligne des scores
+        html += '<tr class="score-row"><td><strong>Score</strong></td>';
+        players.forEach(player => {
+            html += `<td>${player.score}</td>`;
+        });
+        html += '</tr>';
+
+        html += '</tbody></table>';
+
+        // Ajouter les informations supplémentaires
+        const duration = Math.round((game.finishedAt - game.startedAt) / 60000);
+        html += `
+            <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                <p><strong>🏆 Vainqueur :</strong> ${game.winnerName}</p>
+                <p><strong>⏱️ Durée :</strong> ${duration} minutes</p>
+                <p><strong>🎯 Fléchettes lancées :</strong> ${gameData.dartsHistory.length}</p>
+            </div>
+        `;
+
+        container.innerHTML = html;
+        modal.classList.add('active');
     }
 
     /**
@@ -437,6 +569,24 @@ const StatsManager = (() => {
                 }
             });
         });
+
+        // Event listeners pour le modal de détail de partie
+        const closeBtn = document.getElementById('close-game-detail-btn');
+        const modal = document.getElementById('game-detail-modal');
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+        }
+
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target.id === 'game-detail-modal') {
+                    modal.classList.remove('active');
+                }
+            });
+        }
 
         // Afficher la vue globale par défaut
         renderGlobalStats();
@@ -475,6 +625,7 @@ const StatsManager = (() => {
     return {
         saveGameToHistory,
         getAllGames,
+        getGameById,
         clearHistory,
         getGlobalStats,
         getPlayerStats,

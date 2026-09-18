@@ -206,12 +206,22 @@ const App = (() => {
             const winnerId = parseInt(checkedBoxes[0].dataset.playerId);
             const orderedPlayers = reorderPlayersByOpening(winnerId);
 
-            // Démarrer la partie
-            await GameManager.startNewGame(selectedGameMode, orderedPlayers);
-            navigateToScreen('screen-in-game');
-            GameManager.renderScoreboard();
-            GameManager.updateCurrentPlayerInfo();
-            attachScoreboardTapEvents(); // Attacher les événements de tap
+            // Démarrer la partie selon le mode
+            if (selectedGameMode === '301') {
+                // Mode 301
+                await GameManager301.startNewGame301(orderedPlayers);
+                await GameManager301.setPlayerOrder(orderedPlayers);
+                navigateToScreen('screen-301-game');
+                GameManager301.render301Interface();
+                GameManager301.initEventListeners();
+            } else {
+                // Mode Cricket (classic ou cutthroat)
+                await GameManager.startNewGame(selectedGameMode, orderedPlayers);
+                navigateToScreen('screen-in-game');
+                GameManager.renderScoreboard();
+                GameManager.updateCurrentPlayerInfo();
+                attachScoreboardTapEvents(); // Attacher les événements de tap
+            }
         });
 
         // Bouton Relancer (Égalité)
@@ -417,7 +427,11 @@ const App = (() => {
         // Bouton Revanche
         document.getElementById('rematch-btn').addEventListener('click', async () => {
             // Relancer une partie avec les mêmes joueurs et le même mode
-            const game = GameManager.getCurrentGameState();
+            let game = GameManager.getCurrentGameState();
+            if (!game) {
+                game = GameManager301.getCurrentGameState();
+            }
+
             if (game) {
                 const players = game.players.map(p => ({
                     id: p.id,
@@ -429,13 +443,22 @@ const App = (() => {
 
                 // Nettoyer la partie terminée
                 await GameManager.clearFinishedGame();
+                await GameManager301.clearCurrentGame();
 
                 // Lancer directement une nouvelle partie avec le même ordre de joueurs
-                await GameManager.startNewGame(selectedGameMode, players);
-                navigateToScreen('screen-in-game');
-                GameManager.renderScoreboard();
-                GameManager.updateCurrentPlayerInfo();
-                attachScoreboardTapEvents();
+                if (selectedGameMode === '301') {
+                    await GameManager301.startNewGame301(players);
+                    await GameManager301.setPlayerOrder(players);
+                    navigateToScreen('screen-301-game');
+                    GameManager301.render301Interface();
+                    GameManager301.initEventListeners();
+                } else {
+                    await GameManager.startNewGame(selectedGameMode, players);
+                    navigateToScreen('screen-in-game');
+                    GameManager.renderScoreboard();
+                    GameManager.updateCurrentPlayerInfo();
+                    attachScoreboardTapEvents();
+                }
             }
         });
 
@@ -449,6 +472,26 @@ const App = (() => {
         // Bouton Tester un autre GIF
         document.getElementById('test-gif-btn').addEventListener('click', () => {
             GameManager.renderGameOver(); // Recharger avec un nouveau GIF aléatoire
+        });
+
+        // Bouton Voir Scores Finaux
+        document.getElementById('show-final-scores-btn').addEventListener('click', async () => {
+            const modal = document.getElementById('final-scores-modal');
+            modal.classList.add('active');
+            await GameManager.renderFinalScoreboard();
+        });
+
+        // Bouton Fermer Modal
+        document.getElementById('close-final-scores-btn').addEventListener('click', () => {
+            const modal = document.getElementById('final-scores-modal');
+            modal.classList.remove('active');
+        });
+
+        // Fermer le modal en cliquant en dehors
+        document.getElementById('final-scores-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'final-scores-modal') {
+                e.target.classList.remove('active');
+            }
         });
     }
 

@@ -840,6 +840,94 @@ body {
     flex: 1;
 }
 
+/* Modal Final Scores */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    background-color: var(--dark-gray);
+    border: 2px solid var(--gold);
+    border-radius: var(--border-radius);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 30px rgba(201, 168, 76, 0.5);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--gold);
+}
+
+.modal-header h3 {
+    font-family: var(--font-title);
+    color: var(--gold);
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    color: var(--gold);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.btn-close:hover {
+    color: var(--blood-red);
+    transform: scale(1.2);
+}
+
+.modal-body {
+    padding: var(--spacing-md);
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-body .scoreboard {
+    height: auto;
+    max-height: none;
+}
+
 /* Players Management */
 .players-container {
     max-width: 600px;
@@ -1236,6 +1324,296 @@ body {
 
 .shake {
     animation: shake 0.3s ease-in-out;
+}
+
+/* ===========================
+   MODE 301 - Interface
+   =========================== */
+
+.game-301-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: var(--spacing-sm);
+    overflow: hidden;
+}
+
+/* Override game-info-bar pour le mode 301 */
+.game-301-container .game-info-bar {
+    height: auto;
+    min-height: 40px;
+    padding: var(--spacing-sm);
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+}
+
+/* Liste des joueurs verticale */
+.players-301-list {
+    flex: 1;
+    overflow-y: auto;
+    margin: var(--spacing-md) 0;
+    padding-right: var(--spacing-xs);
+}
+
+.player-301-card {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid var(--leather-brown);
+    border-radius: 8px;
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.player-301-card.active {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.1);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+}
+
+.player-301-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.player-avatar-301 {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--leather-brown);
+    flex-shrink: 0;
+}
+
+.player-301-card.active .player-avatar-301 {
+    border-color: var(--gold);
+}
+
+.player-301-score {
+    flex: 1;
+    min-width: 0;
+}
+
+.player-301-name {
+    font-size: 0.9rem;
+    color: var(--off-white);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.score-display-301 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--gold);
+    line-height: 1;
+}
+
+.remaining-display-301 {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 2px;
+}
+
+.avg-display-301 {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+}
+
+/* Historique des 3 fléchettes */
+.round-darts-301 {
+    display: flex;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+    align-items: center;
+}
+
+.dart-chip-301 {
+    background: var(--blood-red);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    min-width: 40px;
+    text-align: center;
+}
+
+/* Barre de progression */
+.progress-bar-301 {
+    width: 100%;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    margin-top: var(--spacing-sm);
+    overflow: hidden;
+}
+
+.progress-fill-301 {
+    height: 100%;
+    background: linear-gradient(90deg, var(--leather-brown), var(--gold));
+    transition: width 0.5s ease;
+}
+
+/* Suggestions de sortie */
+.checkout-suggestions {
+    background: rgba(212, 175, 55, 0.15);
+    border: 1px solid var(--gold);
+    border-radius: 6px;
+    padding: var(--spacing-xs);
+    margin-bottom: var(--spacing-xs);
+    animation: fadeIn 0.3s ease;
+    flex-shrink: 0;
+}
+
+.checkout-suggestions h4 {
+    margin: 0 0 var(--spacing-xs) 0;
+    color: var(--gold);
+    font-size: 0.85rem;
+}
+
+.checkout-suggestions.hidden {
+    display: none;
+}
+
+.checkout-item {
+    padding: 4px var(--spacing-xs);
+    margin: 2px 0;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: var(--off-white);
+}
+
+/* Clavier numérique */
+.dart-input-301 {
+    background: rgba(0, 0, 0, 0.8);
+    padding: var(--spacing-sm);
+    border-radius: 8px;
+    border: 2px solid var(--leather-brown);
+    flex-shrink: 0;
+}
+
+.number-pad {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    margin-bottom: var(--spacing-xs);
+}
+
+.num-btn {
+    aspect-ratio: 1;
+    background: var(--leather-brown);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+    padding: 0;
+}
+
+.num-btn:hover {
+    background: var(--gold);
+    transform: scale(1.05);
+}
+
+.num-btn:active {
+    transform: scale(0.95);
+}
+
+.multiplier-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
+}
+
+.multiplier-btn {
+    background: var(--leather-brown);
+    color: white;
+    border: 2px solid transparent;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+}
+
+.multiplier-btn:hover {
+    background: var(--gold);
+}
+
+.multiplier-btn.active {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.2);
+}
+
+/* Responsive 301 */
+@media (max-width: 480px) {
+    .game-301-container {
+        padding: 4px;
+    }
+
+    .score-display-301 {
+        font-size: 1.75rem;
+    }
+
+    .player-avatar-301 {
+        width: 35px;
+        height: 35px;
+    }
+
+    .num-btn {
+        font-size: 0.9rem;
+    }
+
+    .dart-chip-301 {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        min-width: 30px;
+    }
+
+    .player-301-card {
+        padding: 6px;
+        margin-bottom: 4px;
+    }
+
+    .checkout-item {
+        font-size: 0.7rem;
+        padding: 2px 4px;
+    }
+}
+
+/* Optimisation pour hauteur réduite */
+@media (max-height: 700px) {
+    .player-301-card {
+        padding: 6px;
+        margin-bottom: 4px;
+    }
+
+    .score-display-301 {
+        font-size: 1.5rem;
+    }
+
+    .player-avatar-301 {
+        width: 35px;
+        height: 35px;
+    }
+
+    .dart-input-301 {
+        padding: 6px;
+    }
+
+    .num-btn {
+        font-size: 0.85rem;
+    }
 }
 
 /* Responsive */

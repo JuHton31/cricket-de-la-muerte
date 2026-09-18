@@ -11,6 +11,7 @@ const GameManager = (() => {
 
     // État de la partie en cours
     let currentGame = null;
+    let lastFinishedGameId = null; // ID de la dernière partie terminée pour le modal
     let db = null;
 
     /**
@@ -380,10 +381,14 @@ const GameManager = (() => {
                 return player.score > winner.score ? player : winner;
             });
         } else {
-            // Cut-throat : le moins de points parmi ceux qui ont tout fermé
-            return playersWithAllClosed.reduce((winner, player) => {
-                return player.score < winner.score ? player : winner;
-            });
+            // Cut-throat : pour gagner il faut avoir tout fermé ET avoir le score le plus bas de TOUS les joueurs
+            // Trouver le score minimum de tous les joueurs
+            const minScoreOverall = Math.min(...currentGame.players.map(p => p.score));
+
+            // Un joueur gagne seulement s'il a tout fermé ET qu'il a le score le plus bas
+            const winner = playersWithAllClosed.find(p => p.score === minScoreOverall);
+
+            return winner || null; // Retourne le gagnant ou null si personne ne remplit les deux conditions
         }
     }
 
@@ -395,6 +400,9 @@ const GameManager = (() => {
 
         currentGame.finishedAt = Date.now();
         currentGame.winner = winner;
+
+        // Sauvegarder l'ID pour le modal "Voir Scores"
+        lastFinishedGameId = currentGame.id;
 
         // Sauvegarder la partie dans l'historique
         await StatsManager.saveGameToHistory(currentGame);
@@ -579,6 +587,79 @@ const GameManager = (() => {
         await clearCurrentGame();
     }
 
+    /**
+     * Afficher le scoreboard final dans le modal
+     */
+    async function renderFinalScoreboard() {
+        const container = document.getElementById('final-scoreboard-container');
+        if (!container) {
+            console.error('Final scoreboard container not found');
+            return;
+        }
+
+        // Essayer d'abord avec currentGame (si encore disponible)
+        let gameData = currentGame;
+
+        // Sinon, récupérer depuis l'historique via lastFinishedGameId
+        if (!gameData && lastFinishedGameId) {
+            const savedGame = await StatsManager.getGameById(lastFinishedGameId);
+            if (savedGame && savedGame.fullGameData) {
+                gameData = savedGame.fullGameData;
+            }
+        }
+
+        if (!gameData) {
+            console.error('No game data available to display');
+            container.innerHTML = '<p style="text-align: center; padding: 2rem;">Impossible d\'afficher le scoreboard.</p>';
+            return;
+        }
+
+        const players = gameData.players;
+        const cricketNumbers = [15, 16, 17, 18, 19, 20, 25]; // Bull = 25
+        let html = '<table class="scoreboard"><thead><tr><th><strong>N°</strong></th>';
+
+        // En-têtes des joueurs
+        players.forEach(player => {
+            html += `<th><strong>${player.name}</strong></th>`;
+        });
+        html += '</tr></thead><tbody>';
+
+        // Lignes pour chaque numéro
+        cricketNumbers.forEach(num => {
+            html += `<tr><td><strong>${num === 25 ? 'Bull' : num}</strong></td>`;
+
+            players.forEach((player) => {
+                const marks = player.marks[num];
+                let emoji = '';
+
+                if (marks === 1) {
+                    emoji = '👍';
+                } else if (marks === 2) {
+                    emoji = '✌️';
+                } else if (marks === 3) {
+                    const allClosed = players.every(p => p.marks[num] >= 3);
+                    emoji = allClosed ? '🚫' : '🎰';
+                }
+
+                html += `<td><span class="cell-emoji">${emoji}</span></td>`;
+            });
+
+            html += '</tr>';
+        });
+
+        // Ligne des scores
+        html += '<tr class="score-row"><td><strong>Score</strong></td>';
+        players.forEach(player => {
+            html += `<td>${player.score}</td>`;
+        });
+        html += '</tr>';
+
+        html += '</tbody></table>';
+
+        container.innerHTML = html;
+        console.log('Final scoreboard rendered');
+    }
+
     // API publique
     return {
         hasCurrentGame,
@@ -596,6 +677,7 @@ const GameManager = (() => {
         updateCurrentPlayerInfo,
         renderGameOver,
         clearFinishedGame,
+        renderFinalScoreboard,
         CRICKET_NUMBERS
     };
 })();

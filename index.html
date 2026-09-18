@@ -84,6 +84,10 @@
                                 <strong>Cut-throat Cricket</strong>
                                 <span>Le moins de points gagne</span>
                             </button>
+                            <button class="mode-btn" data-mode="301">
+                                <strong>🎯 Mode 301</strong>
+                                <span>Atteindre exactement 301 points</span>
+                            </button>
                         </div>
                     </div>
 
@@ -184,12 +188,83 @@
                     </button>
 
                     <div class="game-over-actions">
+                        <button id="show-final-scores-btn" class="btn btn-secondary">
+                            📊 Voir Scores
+                        </button>
                         <button id="rematch-btn" class="btn btn-primary btn-large">
                             🔄 Revanche !
                         </button>
                         <button id="back-to-menu-btn" class="btn btn-secondary">
                             Menu Principal
                         </button>
+                    </div>
+                </div>
+
+                <!-- Modal: Final Scoreboard -->
+                <div id="final-scores-modal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>📊 Scores Finaux</h3>
+                            <button id="close-final-scores-btn" class="btn-close">✕</button>
+                        </div>
+                        <div id="final-scoreboard-container" class="modal-body">
+                            <!-- Le scoreboard final sera inséré ici -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Screen: 301 Game -->
+            <section id="screen-301-game" class="screen">
+                <div class="game-301-container">
+                    <!-- Header avec boutons -->
+                    <div class="game-info-bar">
+                        <button id="quit-301-btn" class="btn btn-secondary">← Abandonner</button>
+                        <button id="undo-301-btn" class="btn btn-secondary">↶ Annuler</button>
+                    </div>
+
+                    <!-- Liste verticale des joueurs -->
+                    <div id="players-301-list" class="players-301-list">
+                        <!-- Généré dynamiquement par render301Interface() -->
+                    </div>
+
+                    <!-- Suggestions de sortie -->
+                    <div id="checkout-suggestions" class="checkout-suggestions hidden">
+                        <h4>💡 Suggestions de sortie</h4>
+                        <div id="checkout-list"></div>
+                    </div>
+
+                    <!-- Clavier numérique -->
+                    <div class="dart-input-301">
+                        <div class="number-pad">
+                            <button class="num-btn" data-number="1">1</button>
+                            <button class="num-btn" data-number="2">2</button>
+                            <button class="num-btn" data-number="3">3</button>
+                            <button class="num-btn" data-number="4">4</button>
+                            <button class="num-btn" data-number="5">5</button>
+                            <button class="num-btn" data-number="6">6</button>
+                            <button class="num-btn" data-number="7">7</button>
+                            <button class="num-btn" data-number="8">8</button>
+                            <button class="num-btn" data-number="9">9</button>
+                            <button class="num-btn" data-number="10">10</button>
+                            <button class="num-btn" data-number="11">11</button>
+                            <button class="num-btn" data-number="12">12</button>
+                            <button class="num-btn" data-number="13">13</button>
+                            <button class="num-btn" data-number="14">14</button>
+                            <button class="num-btn" data-number="15">15</button>
+                            <button class="num-btn" data-number="16">16</button>
+                            <button class="num-btn" data-number="17">17</button>
+                            <button class="num-btn" data-number="18">18</button>
+                            <button class="num-btn" data-number="19">19</button>
+                            <button class="num-btn" data-number="20">20</button>
+                            <button class="num-btn" data-number="25">Bull</button>
+                        </div>
+
+                        <div class="multiplier-controls">
+                            <button id="miss-301-btn" class="btn btn-secondary">MISS</button>
+                            <button id="x2-301-btn" class="multiplier-btn">×2</button>
+                            <button id="x3-301-btn" class="multiplier-btn">×3</button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -261,6 +336,19 @@
                         <!-- Le contenu des stats sera généré dynamiquement -->
                     </div>
                 </div>
+
+                <!-- Modal: Game Detail -->
+                <div id="game-detail-modal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="game-detail-title">📊 Détails de la Partie</h3>
+                            <button id="close-game-detail-btn" class="btn-close">✕</button>
+                        </div>
+                        <div id="game-detail-container" class="modal-body">
+                            <!-- Le détail de la partie sera inséré ici -->
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <!-- Screen: Settings -->
@@ -298,7 +386,9 @@
                         <div class="setting-item about">
                             <h3>À propos</h3>
                             <p><strong>Cricket de la Muerte</strong></p>
-                            <p>Version 1.0.0</p>
+                            <p>Version App : <strong>1.3.1</strong></p>
+                            <p>Service Worker : <strong>V14</strong></p>
+                            <p>Mise à jour : <strong>15/09/2026</strong></p>
                             <p>Une PWA de jeu de fléchettes Cricket</p>
                             <p>Ambiance Western Mexicain 🌵💀🎯</p>
                             <p class="credits">Généré avec ❤️ par Claude</p>
@@ -336,6 +426,7 @@
     <script src="/js/players.js"></script>
     <script src="/js/stats.js"></script>
     <script src="/js/game.js"></script>
+    <script src="/js/game301.js"></script>
     <script src="/js/app.js"></script>
 </body>
 </html>

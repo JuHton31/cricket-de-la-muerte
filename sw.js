@@ -5,7 +5,7 @@
  * Fallback offline
  */
 
-const CACHE_VERSION = 'CRICKET_MUERTE_V11';
+const CACHE_VERSION = 'CRICKET_MUERTE_V17';
 const CACHE_STATIC = `${CACHE_VERSION}_static`;
 const CACHE_DYNAMIC = `${CACHE_VERSION}_dynamic`;
 
@@ -19,6 +19,7 @@ const STATIC_ASSETS = [
     '/css/app.css',
     '/js/app.js',
     '/js/game.js',
+    '/js/game301.js',
     '/js/players.js',
     '/js/stats.js',
     '/js/sounds.js',
