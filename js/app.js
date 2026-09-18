@@ -638,7 +638,10 @@ const App = (() => {
                     newWorker.addEventListener('statechange', () => {
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                             console.log('🔄 Nouvelle version disponible');
-                            // Optionnel : afficher une notification de mise à jour
+                            // Afficher une notification de mise à jour
+                            if (confirm('🔄 Une nouvelle version de l\'application est disponible !\n\nVoulez-vous recharger pour l\'installer ?')) {
+                                window.location.reload();
+                            }
                         }
                     });
                 });

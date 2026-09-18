@@ -5,7 +5,7 @@
  * Fallback offline
  */
 
-const CACHE_VERSION = 'CRICKET_MUERTE_V21';
+const CACHE_VERSION = 'CRICKET_MUERTE_V22';
 const CACHE_STATIC = `${CACHE_VERSION}_static`;
 const CACHE_DYNAMIC = `${CACHE_VERSION}_dynamic`;
 
