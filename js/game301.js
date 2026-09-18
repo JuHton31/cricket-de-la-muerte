@@ -27,6 +27,7 @@ const GameManager301 = (() => {
      *     remaining: 301,
      *     dartsThrown: 0,
      *     currentRound: [],
+     *     lastRound: [],  // Garde les fléchettes du dernier tour complet pour affichage
      *     roundsHistory: [],
      *     avgPerRound: 0
      *   }],
@@ -115,6 +116,7 @@ const GameManager301 = (() => {
             remaining: TARGET_SCORE,
             dartsThrown: 0,
             currentRound: [],
+            lastRound: [],
             roundsHistory: [],
             avgPerRound: 0
         }));
@@ -139,11 +141,28 @@ const GameManager301 = (() => {
     async function setPlayerOrder(orderedPlayers) {
         if (!currentGame) return;
 
-        currentGame.players = orderedPlayers.map(p => {
+        // Réordonner les joueurs existants selon l'ordre donné
+        const reorderedPlayers = orderedPlayers.map(p => {
             const existing = currentGame.players.find(pl => pl.id === p.id);
-            return existing || p;
+            if (!existing) {
+                // Si le joueur n'existe pas encore, l'initialiser (ne devrait pas arriver)
+                return {
+                    id: p.id,
+                    name: p.name,
+                    avatar: p.avatar,
+                    score: 0,
+                    remaining: TARGET_SCORE,
+                    dartsThrown: 0,
+                    currentRound: [],
+                    lastRound: [],
+                    roundsHistory: [],
+                    avgPerRound: 0
+                };
+            }
+            return existing;
         });
 
+        currentGame.players = reorderedPlayers;
         currentGame.currentPlayerIndex = 0;
         await saveCurrentGame();
     }
@@ -164,6 +183,11 @@ const GameManager301 = (() => {
 
         const player = getCurrentPlayer();
         const points = number * multiplier;
+
+        // Si c'est la première fléchette du tour, vider lastRound pour afficher "Fléchette 1/3"
+        if (currentGame.currentDart === 1 && player.currentRound.length === 0) {
+            player.lastRound = [];
+        }
 
         // Sauvegarder dans l'historique avant modification
         const roundStartScore = player.score;
@@ -267,6 +291,9 @@ const GameManager301 = (() => {
         // Compter les fléchettes mais ne pas compter les points
         const dartsInRound = player.currentRound.length;
 
+        // Sauvegarder les fléchettes pour affichage (même si c'est un bust)
+        player.lastRound = [...player.currentRound];
+
         // Vider la volée en cours
         player.currentRound = [];
 
@@ -315,42 +342,94 @@ const GameManager301 = (() => {
             player.avgPerRound = player.score / totalRounds;
         }
 
+        // Sauvegarder les fléchettes pour affichage continu
+        player.lastRound = [...player.currentRound];
+
         // Vider la volée en cours
         player.currentRound = [];
     }
 
     /**
-     * Annuler la dernière fléchette de la volée en cours
+     * Annuler la dernière fléchette
      */
     async function undoLastDart() {
-        if (!currentGame || currentGame.currentDart === 1) {
-            return false; // Rien à annuler
+        if (!currentGame || currentGame.dartsHistory.length === 0) {
+            return false; // Aucune fléchette dans l'historique
         }
 
-        const player = getCurrentPlayer();
+        const currentPlayer = getCurrentPlayer();
 
-        if (player.currentRound.length === 0) {
-            return false;
+        // Cas 1 : Le joueur actif a des fléchettes dans sa volée en cours
+        if (currentPlayer.currentRound.length > 0) {
+            // Annuler la dernière fléchette du joueur actif
+            const lastDart = currentPlayer.currentRound.pop();
+
+            currentPlayer.score -= lastDart.points;
+            currentPlayer.remaining = TARGET_SCORE - currentPlayer.score;
+            currentPlayer.dartsThrown--;
+
+            currentGame.dartsHistory.pop();
+            currentGame.currentDart--;
+
+            await saveCurrentGame();
+            render301Interface();
+            return true;
         }
 
-        // Retirer la dernière fléchette
-        const lastDart = player.currentRound.pop();
+        // Cas 2 : Le joueur actif n'a pas encore lancé (currentDart === 1)
+        // On doit annuler la dernière fléchette du joueur précédent (sa 3ème fléchette)
+        if (currentGame.currentDart === 1 && currentGame.dartsHistory.length > 0) {
+            // Trouver le joueur précédent
+            const previousPlayerIndex = (currentGame.currentPlayerIndex - 1 + currentGame.players.length) % currentGame.players.length;
+            const previousPlayer = currentGame.players[previousPlayerIndex];
 
-        // Recalculer le score
-        player.score -= lastDart.points;
-        player.remaining = TARGET_SCORE - player.score;
-        player.dartsThrown--;
+            // La volée du joueur précédent a été terminée et enregistrée dans lastRound
+            if (previousPlayer.lastRound && previousPlayer.lastRound.length === 3) {
+                // Restaurer les 3 fléchettes dans currentRound
+                previousPlayer.currentRound = [...previousPlayer.lastRound];
 
-        // Retirer de l'historique global
-        currentGame.dartsHistory.pop();
+                // Retirer la dernière fléchette (la 3ème)
+                const lastDart = previousPlayer.currentRound.pop();
 
-        // Reculer le compteur de fléchettes
-        currentGame.currentDart--;
+                // Recalculer le score
+                previousPlayer.score -= lastDart.points;
+                previousPlayer.remaining = TARGET_SCORE - previousPlayer.score;
+                previousPlayer.dartsThrown--;
 
-        await saveCurrentGame();
-        render301Interface();
+                // Retirer de l'historique global
+                currentGame.dartsHistory.pop();
 
-        return true;
+                // Annuler la volée terminée dans roundsHistory
+                if (previousPlayer.roundsHistory && previousPlayer.roundsHistory.length > 0) {
+                    const lastRound = previousPlayer.roundsHistory[previousPlayer.roundsHistory.length - 1];
+                    // Vérifier que c'est bien la bonne volée (pas un bust)
+                    if (!lastRound.bust) {
+                        previousPlayer.roundsHistory.pop();
+
+                        // Recalculer la moyenne
+                        const validRounds = previousPlayer.roundsHistory.filter(r => !r.bust);
+                        if (validRounds.length > 0) {
+                            previousPlayer.avgPerRound = previousPlayer.score / validRounds.length;
+                        } else {
+                            previousPlayer.avgPerRound = 0;
+                        }
+                    }
+                }
+
+                // Vider lastRound
+                previousPlayer.lastRound = [];
+
+                // Revenir au joueur précédent avec currentDart = 3
+                currentGame.currentPlayerIndex = previousPlayerIndex;
+                currentGame.currentDart = 3;
+
+                await saveCurrentGame();
+                render301Interface();
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -369,7 +448,7 @@ const GameManager301 = (() => {
         SoundsManager.playGameVictory();
 
         // Afficher l'écran de victoire
-        navigateToScreen('screen-game-over');
+        App.navigateToScreen('screen-game-over');
         GameManager.renderGameOver();
     }
 
@@ -480,8 +559,12 @@ const GameManager301 = (() => {
             const progress = (player.score / TARGET_SCORE) * 100;
 
             // Historique des 3 dernières fléchettes
+            // Pour le joueur actif : afficher currentRound (fléchettes en cours)
+            // Pour les autres : afficher lastRound (dernier tour complet)
             let dartsHTML = '';
-            player.currentRound.forEach(dart => {
+            const dartsToShow = isActive ? player.currentRound : (player.lastRound || []);
+
+            dartsToShow.forEach(dart => {
                 const dartText = dart.multiplier === 0 ? 'MISS' :
                                dart.multiplier === 1 ? `${dart.number}` :
                                dart.multiplier === 2 ? `D${dart.number}` :
@@ -489,14 +572,16 @@ const GameManager301 = (() => {
                 dartsHTML += `<div class="dart-chip-301">${dartText}</div>`;
             });
 
-            // Suggestions de sortie pour le joueur actif uniquement
+            // Suggestions de sortie pour le joueur actif uniquement (max 2)
             let suggestionsHTML = '';
             if (isActive && player.remaining <= CHECKOUT_THRESHOLD && player.remaining > 1) {
                 const suggestions = calculateCheckouts(player.remaining);
                 if (suggestions.length > 0) {
+                    // Prendre les 2 premières suggestions
+                    const topSuggestions = suggestions.slice(0, 2);
                     suggestionsHTML = `
-                        <div class="checkout-inline">
-                            💡 ${suggestions.map(c => c.join('→')).join(' | ')}
+                        <div class="checkout-suggestions-top">
+                            ${topSuggestions.map(s => `<div class="checkout-line">💡 ${s.join('→')}</div>`).join('')}
                         </div>
                     `;
                 }
@@ -508,12 +593,11 @@ const GameManager301 = (() => {
                         <img src="${player.avatar}" alt="${player.name}" class="player-avatar-301">
                         <div class="player-301-score">
                             <div class="player-301-name">${player.name}</div>
-                            <div class="score-display-301">${player.score}</div>
-                            <div class="remaining-display-301">Reste: ${player.remaining}</div>
+                            <div class="remaining-display-301">${player.remaining}</div>
                             <div class="avg-display-301">Moy/volée: ${player.avgPerRound.toFixed(1)}</div>
                         </div>
+                        ${suggestionsHTML}
                     </div>
-                    ${suggestionsHTML}
                     <div class="progress-bar-301">
                         <div class="progress-fill-301" style="width: ${progress}%"></div>
                     </div>
@@ -527,6 +611,18 @@ const GameManager301 = (() => {
 
         playersList.innerHTML = playersHTML;
 
+        // Auto-scroll vers le joueur actif
+        setTimeout(() => {
+            const activeCard = playersList.querySelector('.player-301-card.active');
+            if (activeCard) {
+                activeCard.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'nearest'
+                });
+            }
+        }, 100);
+
         // Cacher l'ancien bloc de suggestions (maintenant intégré dans les cartes)
         if (checkoutContainer) {
             checkoutContainer.classList.add('hidden');
@@ -535,7 +631,12 @@ const GameManager301 = (() => {
         // Activer/désactiver le bouton Annuler
         const undoBtn = document.getElementById('undo-301-btn');
         if (undoBtn) {
-            undoBtn.disabled = currentGame.currentDart === 1;
+            // Le bouton est actif si :
+            // - Le joueur actif a des fléchettes dans sa volée, OU
+            // - Il y a des fléchettes dans l'historique global (on peut annuler celle du joueur précédent)
+            const canUndo = currentGame.players[currentGame.currentPlayerIndex].currentRound.length > 0
+                         || currentGame.dartsHistory.length > 0;
+            undoBtn.disabled = !canUndo;
         }
 
         // Réinitialiser la sélection
@@ -596,7 +697,9 @@ const GameManager301 = (() => {
         document.getElementById('quit-301-btn')?.addEventListener('click', async () => {
             const quit = await quitGame();
             if (quit) {
-                navigateToScreen('screen-home');
+                App.navigateToScreen('screen-play');
+                // Cacher le bouton "Reprendre la partie" s'il existe
+                document.getElementById('resume-game-btn')?.classList.add('hidden');
             }
         });
     }

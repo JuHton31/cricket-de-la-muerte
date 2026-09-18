@@ -95,10 +95,20 @@ const GameManager = (() => {
     }
 
     /**
-     * Vérifier s'il y a une partie en cours
+     * Vérifier s'il y a une partie en cours (non terminée)
      */
     async function hasCurrentGame() {
-        return await loadCurrentGame();
+        const loaded = await loadCurrentGame();
+        if (!loaded) return false;
+
+        // Vérifier que la partie n'est pas terminée
+        if (currentGame && currentGame.finishedAt !== null) {
+            // La partie est terminée, la nettoyer
+            await clearCurrentGame();
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -368,8 +378,12 @@ const GameManager = (() => {
     function checkVictory() {
         // Un joueur gagne s'il a fermé tous les numéros
         const playersWithAllClosed = currentGame.players.filter(p => {
-            return CRICKET_NUMBERS.every(num => p.marks[num] === MAX_MARKS);
+            const allClosed = CRICKET_NUMBERS.every(num => p.marks[num] === MAX_MARKS);
+            console.log(`[DEBUG] Player ${p.name} all closed:`, allClosed, 'marks:', p.marks);
+            return allClosed;
         });
+
+        console.log(`[DEBUG] Players with all closed:`, playersWithAllClosed.length);
 
         if (playersWithAllClosed.length === 0) {
             return null; // Personne n'a encore fermé tous les numéros
@@ -384,10 +398,15 @@ const GameManager = (() => {
             // Cut-throat : pour gagner il faut avoir tout fermé ET avoir le score le plus bas de TOUS les joueurs
             // Trouver le score minimum de tous les joueurs
             const minScoreOverall = Math.min(...currentGame.players.map(p => p.score));
+            console.log(`[DEBUG] Min score overall:`, minScoreOverall);
 
             // Un joueur gagne seulement s'il a tout fermé ET qu'il a le score le plus bas
-            const winner = playersWithAllClosed.find(p => p.score === minScoreOverall);
+            const winner = playersWithAllClosed.find(p => {
+                console.log(`[DEBUG] Checking ${p.name}: score ${p.score} === ${minScoreOverall}?`, p.score === minScoreOverall);
+                return p.score === minScoreOverall;
+            });
 
+            console.log(`[DEBUG] Winner:`, winner ? winner.name : 'none');
             return winner || null; // Retourne le gagnant ou null si personne ne remplit les deux conditions
         }
     }
@@ -541,14 +560,14 @@ const GameManager = (() => {
 
         // Liste des GIFs western
         const westernGifs = [
-            '/gifs/1.gif',
-            '/gifs/2.gif',
-            '/gifs/3.gif',
-            '/gifs/4.gif',
-            '/gifs/5.gif',
-            '/gifs/6.gif',
-            '/gifs/7.gif',
-            '/gifs/8.gif'
+            './gifs/1.gif',
+            './gifs/2.gif',
+            './gifs/3.gif',
+            './gifs/4.gif',
+            './gifs/5.gif',
+            './gifs/6.gif',
+            './gifs/7.gif',
+            './gifs/8.gif'
         ];
 
         // Choisir un GIF random
@@ -591,28 +610,42 @@ const GameManager = (() => {
      * Afficher le scoreboard final dans le modal
      */
     async function renderFinalScoreboard() {
+        console.log('[DEBUG] renderFinalScoreboard called');
         const container = document.getElementById('final-scoreboard-container');
         if (!container) {
-            console.error('Final scoreboard container not found');
+            console.error('[DEBUG] Final scoreboard container not found');
             return;
         }
+        console.log('[DEBUG] Container found');
 
         // Essayer d'abord avec currentGame (si encore disponible)
         let gameData = currentGame;
+        console.log('[DEBUG] currentGame:', currentGame ? 'exists' : 'null');
 
         // Sinon, récupérer depuis l'historique via lastFinishedGameId
         if (!gameData && lastFinishedGameId) {
+            console.log('[DEBUG] Fetching game from history, ID:', lastFinishedGameId);
             const savedGame = await StatsManager.getGameById(lastFinishedGameId);
+            console.log('[DEBUG] savedGame:', savedGame);
             if (savedGame && savedGame.fullGameData) {
                 gameData = savedGame.fullGameData;
+                console.log('[DEBUG] Using fullGameData from history');
             }
         }
 
         if (!gameData) {
-            console.error('No game data available to display');
+            console.error('[DEBUG] No game data available to display');
             container.innerHTML = '<p style="text-align: center; padding: 2rem;">Impossible d\'afficher le scoreboard.</p>';
             return;
         }
+
+        if (!gameData.players || gameData.players.length === 0) {
+            console.error('[DEBUG] No players in game data');
+            container.innerHTML = '<p style="text-align: center; padding: 2rem;">Aucun joueur trouvé.</p>';
+            return;
+        }
+
+        console.log('[DEBUG] gameData players:', gameData.players);
 
         const players = gameData.players;
         const cricketNumbers = [15, 16, 17, 18, 19, 20, 25]; // Bull = 25
@@ -629,15 +662,15 @@ const GameManager = (() => {
             html += `<tr><td><strong>${num === 25 ? 'Bull' : num}</strong></td>`;
 
             players.forEach((player) => {
-                const marks = player.marks[num];
+                const marks = player.marks && player.marks[num] !== undefined ? player.marks[num] : 0;
                 let emoji = '';
 
                 if (marks === 1) {
                     emoji = '👍';
                 } else if (marks === 2) {
                     emoji = '✌️';
-                } else if (marks === 3) {
-                    const allClosed = players.every(p => p.marks[num] >= 3);
+                } else if (marks >= 3) {
+                    const allClosed = players.every(p => p.marks && p.marks[num] >= 3);
                     emoji = allClosed ? '🚫' : '🎰';
                 }
 
@@ -650,14 +683,15 @@ const GameManager = (() => {
         // Ligne des scores
         html += '<tr class="score-row"><td><strong>Score</strong></td>';
         players.forEach(player => {
-            html += `<td>${player.score}</td>`;
+            html += `<td>${player.score || 0}</td>`;
         });
         html += '</tr>';
 
         html += '</tbody></table>';
 
         container.innerHTML = html;
-        console.log('Final scoreboard rendered');
+        console.log('[DEBUG] Final scoreboard HTML injected into container');
+        console.log('[DEBUG] HTML length:', html.length);
     }
 
     // API publique

@@ -272,13 +272,16 @@ const PlayersManager = (() => {
         }
 
         modal.classList.remove('hidden');
+        modal.classList.add('active');
     }
 
     /**
      * Fermer le modal
      */
     function closePlayerModal() {
-        document.getElementById('player-modal').classList.add('hidden');
+        const modal = document.getElementById('player-modal');
+        modal.classList.remove('active');
+        modal.classList.add('hidden');
     }
 
     /**

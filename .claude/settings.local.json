@@ -5,7 +5,8 @@
       "Bash(mkdir gifs:*)",
       "WebFetch(domain:juhton31.github.io)",
       "Bash(curl -L https://juhton31.github.io/cricket-de-la-muerte/sw.js)",
-      "WebFetch(domain:fonts.googleapis.com)"
+      "WebFetch(domain:fonts.googleapis.com)",
+      "Bash(python -m http.server 8000)"
     ]
   }
 }

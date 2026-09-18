@@ -303,14 +303,14 @@ body {
 }
 
 .mode-btn {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
     background-color: var(--dark-gray);
     border: 2px solid var(--medium-gray);
     border-radius: var(--border-radius);
     color: var(--off-white);
     cursor: pointer;
     transition: var(--transition);
-    text-align: left;
+    text-align: center;
     font-family: var(--font-body);
 }
 
@@ -327,18 +327,15 @@ body {
     display: block;
     font-size: 1.1rem;
     color: var(--gold);
-    margin-bottom: var(--spacing-xs);
-}
-
-.mode-btn span {
-    font-size: 0.9rem;
-    opacity: 0.8;
 }
 
 .player-selection {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: var(--spacing-md);
+    max-height: 35vh;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
 .player-card {
@@ -415,6 +412,13 @@ body {
     border: 2px solid var(--medium-gray);
     border-radius: var(--border-radius);
     transition: var(--transition);
+    cursor: pointer;
+    user-select: none;
+}
+
+.opening-throw-item:hover {
+    border-color: var(--gold);
+    background-color: rgba(201, 168, 76, 0.05);
 }
 
 .opening-throw-item.selected {
@@ -716,27 +720,12 @@ body {
     background-color: var(--blood-red);
 }
 
-/* Multiplier selector removed - now using tap system */
+/* Multiplier selector removed for Cricket mode - now using tap system */
 .multiplier-selector {
     display: none !important;
 }
 
-.multiplier-btn {
-    display: none;
-    font-weight: bold;
-    background-color: var(--dark-gray);
-    color: var(--off-white);
-    border: 2px solid var(--medium-gray);
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: var(--transition);
-    font-family: var(--font-body);
-}
-
-.multiplier-btn:hover, .multiplier-btn:active {
-    border-color: var(--gold);
-    background-color: rgba(201, 168, 76, 0.1);
-}
+/* Multiplier buttons are still needed for 301 mode - styled below at line 1557 */
 
 .game-actions {
     display: none;
@@ -977,24 +966,7 @@ body {
     gap: var(--spacing-sm);
 }
 
-/* Modal */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: var(--spacing-lg);
-}
-
-.modal.hidden {
-    display: none;
-}
+/* Modal (définition déjà faite plus haut, celle-ci est supprimée pour éviter les conflits) */
 
 .modal-content {
     background-color: var(--dark-gray);
@@ -1104,6 +1076,37 @@ body {
 .stats-container {
     max-width: 700px;
     margin: 0 auto;
+}
+
+/* Filtres d'historique */
+.history-filter {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    background: var(--dark-gray);
+    color: var(--off-white);
+    border: 2px solid var(--medium-gray);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+}
+
+.filter-btn:hover {
+    border-color: var(--gold);
+}
+
+.filter-btn.active {
+    background: var(--gold);
+    color: var(--bg-black);
+    border-color: var(--gold);
+    font-weight: bold;
 }
 
 .stats-tabs {
@@ -1348,12 +1351,18 @@ body {
     margin-bottom: 4px;
 }
 
+/* Boutons plus compacts dans le mode 301 */
+.game-301-container .game-info-bar .btn {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+}
+
 /* Liste des joueurs verticale */
 .players-301-list {
     flex: 0 1 auto;
-    max-height: 35vh;
+    max-height: 30vh;
     overflow-y: auto;
-    margin: 0 0 4px 0;
+    margin: 0 0 8px 0;
     padding-right: 2px;
 }
 
@@ -1361,8 +1370,8 @@ body {
     background: rgba(0, 0, 0, 0.5);
     border: 2px solid var(--leather-brown);
     border-radius: 6px;
-    padding: 4px 6px;
-    margin-bottom: 3px;
+    padding: 3px 5px;
+    margin-bottom: 2px;
     position: relative;
     transition: all 0.3s ease;
 }
@@ -1377,11 +1386,12 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
+    position: relative;
 }
 
 .player-avatar-301 {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: 2px solid var(--leather-brown);
     flex-shrink: 0;
@@ -1406,38 +1416,41 @@ body {
     line-height: 1.2;
 }
 
-.score-display-301 {
-    font-size: 1.5rem;
+.remaining-display-301 {
+    font-size: 2rem;
     font-weight: bold;
     color: var(--gold);
     line-height: 1;
-}
-
-.remaining-display-301 {
-    font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.6);
-    margin-top: 0;
-    line-height: 1.2;
+    margin-top: 2px;
 }
 
 .avg-display-301 {
-    font-size: 0.65rem;
-    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
     font-style: italic;
     line-height: 1.2;
+    margin-top: 2px;
 }
 
-/* Suggestions inline dans la carte */
-.checkout-inline {
-    font-size: 0.7rem;
+/* Suggestions en haut à droite du cartouche */
+.checkout-suggestions-top {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    font-size: 0.65rem;
     color: var(--gold);
-    background: rgba(212, 175, 55, 0.15);
+}
+
+.checkout-line {
+    background: rgba(212, 175, 55, 0.2);
+    border: 1px solid var(--gold);
     padding: 2px 4px;
     border-radius: 3px;
-    margin-top: 2px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.2;
 }
 
 /* Historique des 3 fléchettes */
@@ -1463,10 +1476,10 @@ body {
 /* Barre de progression */
 .progress-bar-301 {
     width: 100%;
-    height: 4px;
+    height: 3px;
     background: rgba(0, 0, 0, 0.5);
     border-radius: 2px;
-    margin-top: 2px;
+    margin-top: 1px;
     overflow: hidden;
 }
 
@@ -1597,8 +1610,8 @@ body {
         padding: 4px;
     }
 
-    .score-display-301 {
-        font-size: 1.75rem;
+    .remaining-display-301 {
+        font-size: 2.5rem;
     }
 
     .player-avatar-301 {

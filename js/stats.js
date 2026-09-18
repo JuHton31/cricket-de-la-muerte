@@ -194,10 +194,10 @@ const StatsManager = (() => {
 
                 const stats = playerStats[playerData.id];
                 stats.gamesPlayed++;
-                stats.totalScore += playerData.score;
-                stats.totalDarts += playerData.totalDarts;
-                stats.totalDoubles += playerData.doubles;
-                stats.totalTriples += playerData.triples;
+                stats.totalScore += playerData.score || 0;
+                stats.totalDarts += playerData.totalDarts || 0;
+                stats.totalDoubles += playerData.doubles || 0;
+                stats.totalTriples += playerData.triples || 0;
 
                 if (game.winnerId === playerData.id) {
                     stats.gamesWon++;
@@ -208,7 +208,9 @@ const StatsManager = (() => {
                         (stats.favoriteNumbers[playerData.favoriteNumber] || 0) + 1;
                 }
 
-                stats.closedNumbers.push(...playerData.closedNumbers);
+                if (playerData.closedNumbers && Array.isArray(playerData.closedNumbers)) {
+                    stats.closedNumbers.push(...playerData.closedNumbers);
+                }
             });
         });
 
@@ -254,6 +256,8 @@ const StatsManager = (() => {
     async function renderGlobalStats() {
         const container = document.getElementById('stats-content');
         const stats = await getGlobalStats();
+
+        console.log('[DEBUG] Global stats:', stats);
 
         if (stats.totalGames === 0) {
             container.innerHTML = `
@@ -396,9 +400,9 @@ const StatsManager = (() => {
     /**
      * Afficher l'historique des parties
      */
-    async function renderHistory() {
+    async function renderHistory(filterMode = 'all') {
         const container = document.getElementById('stats-content');
-        const games = await getAllGames();
+        let games = await getAllGames();
 
         if (games.length === 0) {
             container.innerHTML = `
@@ -409,10 +413,37 @@ const StatsManager = (() => {
             return;
         }
 
+        // Filtrer par mode si nécessaire
+        if (filterMode !== 'all') {
+            games = games.filter(g => g.mode === filterMode);
+        }
+
+        if (games.length === 0) {
+            container.innerHTML = `
+                <div class="history-filter">
+                    <button class="filter-btn active" data-mode="all">Tous</button>
+                    <button class="filter-btn" data-mode="classic">Cricket Classique</button>
+                    <button class="filter-btn" data-mode="cutthroat">Cut-throat</button>
+                    <button class="filter-btn" data-mode="301">Mode 301</button>
+                </div>
+                <div class="stats-empty">
+                    <p>Aucune partie dans ce mode.</p>
+                </div>
+            `;
+            attachHistoryFilterListeners();
+            return;
+        }
+
         // Trier par date décroissante
         games.sort((a, b) => b.finishedAt - a.finishedAt);
 
         const html = `
+            <div class="history-filter">
+                <button class="filter-btn ${filterMode === 'all' ? 'active' : ''}" data-mode="all">Tous</button>
+                <button class="filter-btn ${filterMode === 'classic' ? 'active' : ''}" data-mode="classic">Cricket Classique</button>
+                <button class="filter-btn ${filterMode === 'cutthroat' ? 'active' : ''}" data-mode="cutthroat">Cut-throat</button>
+                <button class="filter-btn ${filterMode === '301' ? 'active' : ''}" data-mode="301">Mode 301</button>
+            </div>
             <div class="history-list">
                 ${games.map(game => {
                     const date = new Date(game.finishedAt);
@@ -456,12 +487,28 @@ const StatsManager = (() => {
 
         container.innerHTML = html;
 
+        // Ajouter les event listeners pour les filtres
+        attachHistoryFilterListeners();
+
         // Ajouter les event listeners pour les boutons "Voir Détails"
         const viewButtons = container.querySelectorAll('.btn-view-game-detail');
         viewButtons.forEach(btn => {
             btn.addEventListener('click', async () => {
                 const gameId = parseInt(btn.dataset.gameId);
                 await showGameDetail(gameId);
+            });
+        });
+    }
+
+    /**
+     * Attacher les listeners aux boutons de filtre d'historique
+     */
+    function attachHistoryFilterListeners() {
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const mode = btn.dataset.mode;
+                await renderHistory(mode);
             });
         });
     }
@@ -496,17 +543,67 @@ const StatsManager = (() => {
 
         // Affichage spécifique mode 301
         if (game.mode === '301') {
+            // Trier les joueurs par score restant (ascending)
+            const sortedPlayers = [...players].sort((a, b) => {
+                const remainingA = 301 - (a.score || 0);
+                const remainingB = 301 - (b.score || 0);
+                return remainingA - remainingB;
+            });
+
+            // Compter les busts
+            const getBusts = (player) => {
+                if (!gameData.players) return 0;
+                const fullPlayer = gameData.players.find(p => p.id === player.id);
+                if (!fullPlayer || !fullPlayer.roundsHistory) return 0;
+                return fullPlayer.roundsHistory.filter(r => r.bust).length;
+            };
+
+            // Meilleur tour
+            const getBestRound = (player) => {
+                if (!gameData.players) return 0;
+                const fullPlayer = gameData.players.find(p => p.id === player.id);
+                if (!fullPlayer || !fullPlayer.roundsHistory) return 0;
+                const validRounds = fullPlayer.roundsHistory.filter(r => !r.bust);
+                if (validRounds.length === 0) return 0;
+                return Math.max(...validRounds.map(r => r.totalPoints || 0));
+            };
+
             html = `
                 <div style="padding: 1rem;">
-                    <h4 style="color: var(--gold); margin-bottom: 1rem;">📊 Scores Finaux</h4>
-                    ${players.map(p => `
-                        <div style="background: rgba(0,0,0,0.3); padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 6px;">
-                            <strong>${p.name}</strong><br>
-                            Score final : ${p.score} / 301<br>
-                            Fléchettes : ${p.dartsThrown || 0}<br>
-                            Moyenne : ${(p.avgPerRound || 0).toFixed(1)} pts/volée
-                        </div>
-                    `).join('')}
+                    <h4 style="color: var(--gold); margin-bottom: 0.5rem;">🏆 Classement Final</h4>
+                    ${sortedPlayers.map((p, index) => {
+                        const remaining = 301 - (p.score || 0);
+                        const isWinner = p.id === game.winnerId;
+                        return `
+                            <div style="background: ${isWinner ? 'rgba(212, 175, 55, 0.2)' : 'rgba(0,0,0,0.3)'};
+                                        padding: 0.5rem;
+                                        margin-bottom: 0.25rem;
+                                        border-radius: 6px;
+                                        border-left: 3px solid ${isWinner ? 'var(--gold)' : 'transparent'};">
+                                <strong>${index + 1}. ${p.name}</strong> ${isWinner ? '⭐' : ''}<br>
+                                <span style="font-size: 0.85rem; opacity: 0.8;">
+                                    ${remaining === 0 ? '✓ Terminé' : `Restant: ${remaining}`}
+                                </span>
+                            </div>
+                        `;
+                    }).join('')}
+
+                    <h4 style="color: var(--gold); margin-top: 1.5rem; margin-bottom: 0.5rem;">📈 Statistiques par Joueur</h4>
+                    ${sortedPlayers.map(p => {
+                        const busts = getBusts(p);
+                        const bestRound = getBestRound(p);
+                        return `
+                            <div style="background: rgba(0,0,0,0.3); padding: 0.75rem; margin-bottom: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="font-size: 1.1rem;">${p.name}</strong><br>
+                                <div style="margin-top: 0.5rem; font-size: 0.9rem; line-height: 1.6;">
+                                    • Fléchettes lancées: <strong>${p.dartsThrown || 0}</strong><br>
+                                    • Moyenne/volée: <strong>${(p.avgPerRound || 0).toFixed(1)} pts</strong><br>
+                                    • Meilleur tour: <strong>${bestRound} pts</strong><br>
+                                    • Busts: <strong>${busts}</strong>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
             `;
         } else {
@@ -525,15 +622,15 @@ const StatsManager = (() => {
             html += `<tr><td><strong>${num === 25 ? 'Bull' : num}</strong></td>`;
 
             players.forEach((player) => {
-                const marks = player.marks[num];
+                const marks = player.marks && player.marks[num] !== undefined ? player.marks[num] : 0;
                 let emoji = '';
 
                 if (marks === 1) {
                     emoji = '👍';
                 } else if (marks === 2) {
                     emoji = '✌️';
-                } else if (marks === 3) {
-                    const allClosed = players.every(p => p.marks[num] >= 3);
+                } else if (marks >= 3) {
+                    const allClosed = players.every(p => p.marks && p.marks[num] >= 3);
                     emoji = allClosed ? '🚫' : '🎰';
                 }
 
@@ -546,19 +643,58 @@ const StatsManager = (() => {
         // Ligne des scores
         html += '<tr class="score-row"><td><strong>Score</strong></td>';
         players.forEach(player => {
-            html += `<td>${player.score}</td>`;
+            html += `<td>${player.score || 0}</td>`;
         });
         html += '</tr>';
 
             html += '</tbody></table>';
+
+            // Ajouter le classement et les stats pour Cricket
+            const sortedPlayers = [...players].sort((a, b) => {
+                if (game.mode === 'classic') {
+                    return b.score - a.score; // Décroissant
+                } else {
+                    return a.score - b.score; // Croissant pour cutthroat
+                }
+            });
+
+            html += `
+                <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                    <h4 style="color: var(--gold); margin-bottom: 0.5rem;">🏆 Classement Final</h4>
+                    ${sortedPlayers.map((p, index) => {
+                        const isWinner = p.id === game.winnerId;
+                        return `
+                            <div style="padding: 0.25rem 0;">
+                                <strong>${index + 1}. ${p.name}</strong> ${isWinner ? '⭐' : ''} - ${p.score || 0} pts
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <div style="margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                    <h4 style="color: var(--gold); margin-bottom: 0.5rem;">📈 Statistiques par Joueur</h4>
+                    ${game.players.map(p => `
+                        <div style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <strong style="font-size: 1rem;">${p.name}</strong><br>
+                            <div style="margin-top: 0.25rem; font-size: 0.85rem; opacity: 0.9; line-height: 1.5;">
+                                • Fléchettes lancées: <strong>${p.totalDarts || 0}</strong><br>
+                                • Numéros fermés: <strong>${(p.closedNumbers || []).length}/7</strong><br>
+                                • Taux de fermeture: <strong>${((p.closureRate || 0) * 100).toFixed(0)}%</strong><br>
+                                • Doubles: <strong>${p.doubles || 0}</strong>  Triples: <strong>${p.triples || 0}</strong>
+                                ${p.favoriteNumber ? `<br>• Numéro préféré: <strong>${p.favoriteNumber === 25 ? 'Bull' : p.favoriteNumber}</strong>` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
         }
 
-        // Ajouter les informations supplémentaires
+        // Ajouter les informations générales
         const duration = Math.round((game.finishedAt - game.startedAt) / 60000);
         html += `
-            <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
-                <p><strong>🏆 Vainqueur :</strong> ${game.winnerName}</p>
+            <div style="margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
                 <p><strong>⏱️ Durée :</strong> ${duration} minutes</p>
+                <p><strong>📅 Date :</strong> ${new Date(game.finishedAt).toLocaleString()}</p>
             </div>
         `;
 
@@ -609,8 +745,8 @@ const StatsManager = (() => {
             });
         }
 
-        // Afficher la vue globale par défaut
-        renderGlobalStats();
+        // Afficher l'historique par défaut
+        renderHistory();
     }
 
     /**
@@ -651,6 +787,9 @@ const StatsManager = (() => {
         getGlobalStats,
         getPlayerStats,
         initStatsScreen,
-        confirmClearHistory
+        confirmClearHistory,
+        renderHistory,
+        renderGlobalStats,
+        renderPlayerStats
     };
 })();

@@ -37,9 +37,26 @@ const App = (() => {
         // Charger les joueurs existants
         await PlayersManager.renderPlayersList();
 
-        // Vérifier s'il y a une partie en cours
-        const hasGame = await GameManager.hasCurrentGame();
-        if (hasGame) {
+        // Vérifier s'il y a une partie en cours (Cricket ou 301)
+        const hasCricketGame = await GameManager.hasCurrentGame();
+
+        // Si pas de partie Cricket, vérifier s'il y a une partie 301
+        let has301Game = false;
+        if (!hasCricketGame) {
+            const loaded = await GameManager301.loadCurrentGame();
+            if (loaded) {
+                const gameState = GameManager301.getCurrentGameState();
+                // Vérifier que la partie n'est pas terminée
+                if (gameState && gameState.finishedAt === null) {
+                    has301Game = true;
+                } else {
+                    // Partie terminée, la nettoyer
+                    await GameManager301.clearCurrentGame();
+                }
+            }
+        }
+
+        if (hasCricketGame || has301Game) {
             document.getElementById('resume-game-btn').classList.remove('hidden');
         }
 
@@ -78,7 +95,18 @@ const App = (() => {
                 if (screenName === 'players') {
                     PlayersManager.renderPlayersList();
                 } else if (screenName === 'stats') {
-                    // Les stats se rafraîchissent automatiquement via les onglets
+                    // Rafraîchir l'onglet actif
+                    const activeTab = document.querySelector('.stats-tab.active');
+                    if (activeTab) {
+                        const tabType = activeTab.dataset.tab;
+                        if (tabType === 'history') {
+                            StatsManager.renderHistory();
+                        } else if (tabType === 'global') {
+                            StatsManager.renderGlobalStats();
+                        } else if (tabType === 'player') {
+                            StatsManager.renderPlayerStats();
+                        }
+                    }
                 }
             });
         });
@@ -96,13 +124,46 @@ const App = (() => {
 
         // Bouton Reprendre la Partie
         document.getElementById('resume-game-btn').addEventListener('click', async () => {
-            const loaded = await GameManager.loadCurrentGame();
-            if (loaded) {
-                navigateToScreen('screen-in-game');
-                GameManager.renderScoreboard();
-                GameManager.updateCurrentPlayerInfo();
-                attachScoreboardTapEvents(); // Attacher les événements de tap
+            // Essayer de charger une partie Cricket
+            const loadedCricket = await GameManager.loadCurrentGame();
+            if (loadedCricket) {
+                const gameState = GameManager.getCurrentGameState();
+
+                // Vérifier que la partie n'est pas terminée
+                if (gameState && gameState.finishedAt === null) {
+                    if (gameState.mode === '301') {
+                        // C'est une partie 301
+                        await GameManager301.loadCurrentGame();
+                        navigateToScreen('screen-301-game');
+                        GameManager301.render301Interface();
+                        GameManager301.initEventListeners();
+                    } else {
+                        // C'est une partie Cricket
+                        navigateToScreen('screen-in-game');
+                        GameManager.renderScoreboard();
+                        GameManager.updateCurrentPlayerInfo();
+                        attachScoreboardTapEvents();
+                    }
+                    return;
+                }
             }
+
+            // Si aucune partie Cricket, essayer mode 301
+            const loaded301 = await GameManager301.loadCurrentGame();
+            if (loaded301) {
+                const gameState = GameManager301.getCurrentGameState();
+
+                // Vérifier que la partie n'est pas terminée
+                if (gameState && gameState.finishedAt === null) {
+                    navigateToScreen('screen-301-game');
+                    GameManager301.render301Interface();
+                    GameManager301.initEventListeners();
+                    return;
+                }
+            }
+
+            // Aucune partie en cours, cacher le bouton
+            document.getElementById('resume-game-btn').classList.add('hidden');
         });
 
         // Sélection du mode de jeu
@@ -251,17 +312,31 @@ const App = (() => {
         const container = document.getElementById('opening-throw-list');
 
         container.innerHTML = selectedPlayers.map(player => `
-            <div class="opening-throw-item">
+            <div class="opening-throw-item" data-player-id="${player.id}">
                 <input type="checkbox" data-player-id="${player.id}">
                 <img class="player-avatar" src="${player.avatar}" alt="${player.name}">
                 <div class="player-name">${player.name}</div>
             </div>
         `).join('');
 
-        // Événements des cases à cocher
-        container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        // Rendre toute la cartouche cliquable
+        container.querySelectorAll('.opening-throw-item').forEach(item => {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+
+            // Clic sur la cartouche (mais pas sur la checkbox directement)
+            item.addEventListener('click', (e) => {
+                // Si on a cliqué directement sur la checkbox, ne rien faire (elle gère son propre état)
+                if (e.target === checkbox) return;
+
+                // Sinon, toggler la checkbox
+                checkbox.checked = !checkbox.checked;
+
+                // Déclencher manuellement l'événement change
+                checkbox.dispatchEvent(new Event('change'));
+            });
+
+            // Événement change de la checkbox
             checkbox.addEventListener('change', () => {
-                const item = checkbox.closest('.opening-throw-item');
                 if (checkbox.checked) {
                     item.classList.add('selected');
                 } else {
@@ -464,34 +539,19 @@ const App = (() => {
 
         // Bouton Menu Principal
         document.getElementById('back-to-menu-btn').addEventListener('click', async () => {
-            // Nettoyer la partie terminée
+            // Nettoyer les parties terminées
             await GameManager.clearFinishedGame();
+            await GameManager301.clearCurrentGame();
+
+            // Cacher le bouton "Reprendre la partie"
+            document.getElementById('resume-game-btn').classList.add('hidden');
+
             navigateToScreen('screen-play');
         });
 
         // Bouton Tester un autre GIF
         document.getElementById('test-gif-btn').addEventListener('click', () => {
             GameManager.renderGameOver(); // Recharger avec un nouveau GIF aléatoire
-        });
-
-        // Bouton Voir Scores Finaux
-        document.getElementById('show-final-scores-btn').addEventListener('click', async () => {
-            const modal = document.getElementById('final-scores-modal');
-            modal.classList.add('active');
-            await GameManager.renderFinalScoreboard();
-        });
-
-        // Bouton Fermer Modal
-        document.getElementById('close-final-scores-btn').addEventListener('click', () => {
-            const modal = document.getElementById('final-scores-modal');
-            modal.classList.remove('active');
-        });
-
-        // Fermer le modal en cliquant en dehors
-        document.getElementById('final-scores-modal').addEventListener('click', (e) => {
-            if (e.target.id === 'final-scores-modal') {
-                e.target.classList.remove('active');
-            }
         });
     }
 
@@ -569,7 +629,7 @@ const App = (() => {
     async function registerServiceWorker() {
         if ('serviceWorker' in navigator) {
             try {
-                const registration = await navigator.serviceWorker.register('/sw.js');
+                const registration = await navigator.serviceWorker.register('./sw.js');
                 console.log('✅ Service Worker enregistré:', registration.scope);
 
                 // Vérifier les mises à jour
