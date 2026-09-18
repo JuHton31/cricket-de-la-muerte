@@ -483,15 +483,36 @@ const StatsManager = (() => {
 
         // Mettre à jour le titre
         const date = new Date(game.finishedAt);
-        const modeLabel = game.mode === 'classic' ? 'Classique' : 'Cut-throat';
+        const modeLabel = game.mode === 'classic' ? 'Classique'
+                        : game.mode === 'cutthroat' ? 'Cut-throat'
+                        : 'Mode 301';
         titleElement.textContent = `📊 ${modeLabel} - ${date.toLocaleDateString()}`;
 
         // Générer le scoreboard
         const gameData = game.fullGameData;
         const players = gameData.players;
-        const CRICKET_NUMBERS = [15, 16, 17, 18, 19, 20, 25];
 
-        let html = '<table class="scoreboard"><thead><tr><th><strong>N°</strong></th>';
+        let html = '';
+
+        // Affichage spécifique mode 301
+        if (game.mode === '301') {
+            html = `
+                <div style="padding: 1rem;">
+                    <h4 style="color: var(--gold); margin-bottom: 1rem;">📊 Scores Finaux</h4>
+                    ${players.map(p => `
+                        <div style="background: rgba(0,0,0,0.3); padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 6px;">
+                            <strong>${p.name}</strong><br>
+                            Score final : ${p.score} / 301<br>
+                            Fléchettes : ${p.dartsThrown || 0}<br>
+                            Moyenne : ${(p.avgPerRound || 0).toFixed(1)} pts/volée
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            // Mode Cricket : afficher le tableau avec marks
+            const CRICKET_NUMBERS = [15, 16, 17, 18, 19, 20, 25];
+            html = '<table class="scoreboard"><thead><tr><th><strong>N°</strong></th>';
 
         // En-têtes des joueurs
         players.forEach(player => {
@@ -529,7 +550,8 @@ const StatsManager = (() => {
         });
         html += '</tr>';
 
-        html += '</tbody></table>';
+            html += '</tbody></table>';
+        }
 
         // Ajouter les informations supplémentaires
         const duration = Math.round((game.finishedAt - game.startedAt) / 60000);
@@ -537,7 +559,6 @@ const StatsManager = (() => {
             <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
                 <p><strong>🏆 Vainqueur :</strong> ${game.winnerName}</p>
                 <p><strong>⏱️ Durée :</strong> ${duration} minutes</p>
-                <p><strong>🎯 Fléchettes lancées :</strong> ${gameData.dartsHistory.length}</p>
             </div>
         `;
 

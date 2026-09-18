@@ -458,8 +458,8 @@ const GameManager301 = (() => {
             });
         });
 
-        // Limiter à 5 suggestions et favoriser les plus simples
-        return checkouts.slice(0, 5);
+        // Limiter à 2 suggestions seulement
+        return checkouts.slice(0, 2);
     }
 
     /**
@@ -489,6 +489,19 @@ const GameManager301 = (() => {
                 dartsHTML += `<div class="dart-chip-301">${dartText}</div>`;
             });
 
+            // Suggestions de sortie pour le joueur actif uniquement
+            let suggestionsHTML = '';
+            if (isActive && player.remaining <= CHECKOUT_THRESHOLD && player.remaining > 1) {
+                const suggestions = calculateCheckouts(player.remaining);
+                if (suggestions.length > 0) {
+                    suggestionsHTML = `
+                        <div class="checkout-inline">
+                            💡 ${suggestions.map(c => c.join('→')).join(' | ')}
+                        </div>
+                    `;
+                }
+            }
+
             playersHTML += `
                 <div class="player-301-card ${isActive ? 'active' : ''}" data-player-index="${index}">
                     <div class="player-301-header">
@@ -500,6 +513,7 @@ const GameManager301 = (() => {
                             <div class="avg-display-301">Moy/volée: ${player.avgPerRound.toFixed(1)}</div>
                         </div>
                     </div>
+                    ${suggestionsHTML}
                     <div class="progress-bar-301">
                         <div class="progress-fill-301" style="width: ${progress}%"></div>
                     </div>
@@ -513,23 +527,8 @@ const GameManager301 = (() => {
 
         playersList.innerHTML = playersHTML;
 
-        // Suggestions de sortie pour le joueur actif
-        const activePlayer = getCurrentPlayer();
-        if (activePlayer && activePlayer.remaining <= CHECKOUT_THRESHOLD && activePlayer.remaining > 1) {
-            const suggestions = calculateCheckouts(activePlayer.remaining);
-
-            if (suggestions.length > 0) {
-                let suggestionsHTML = '';
-                suggestions.forEach(checkout => {
-                    suggestionsHTML += `<div class="checkout-item">${checkout.join(' → ')}</div>`;
-                });
-
-                checkoutList.innerHTML = suggestionsHTML;
-                checkoutContainer.classList.remove('hidden');
-            } else {
-                checkoutContainer.classList.add('hidden');
-            }
-        } else {
+        // Cacher l'ancien bloc de suggestions (maintenant intégré dans les cartes)
+        if (checkoutContainer) {
             checkoutContainer.classList.add('hidden');
         }
 
