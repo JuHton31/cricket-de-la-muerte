@@ -189,8 +189,8 @@ const GameManager301 = (() => {
             player.lastRound = [];
         }
 
-        // Sauvegarder dans l'historique avant modification
-        const roundStartScore = player.score;
+        // Retrouver le score au début de la volée, avant les points déjà marqués
+        const roundStartScore = player.score - player.currentRound.reduce((sum, dart) => sum + dart.points, 0);
 
         // Ajouter à la volée en cours
         player.currentRound.push({ number, multiplier, points });
